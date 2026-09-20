@@ -3,6 +3,12 @@ import { getEngine, resetEngine, buildSystemPrompt, checkWebGPU } from '../servi
 import useAppStore from '../store/useAppStore';
 
 const STALL_TIMEOUT_MS = 30000;
+// How many recent chat messages to resend as context. Keeps the prompt inside
+// the small model's context window (gemma3-1b is capped at 4096 tokens) and,
+// just as importantly, keeps old questions from crowding out the current one —
+// a weak model given a long history can drift into answering a previous
+// question instead of the new one.
+const MAX_HISTORY_MESSAGES = 8;
 
 const GPU_REASON_MESSAGES = {
   missing: 'Your browser doesn\'t expose the WebGPU API at all. Try a recent Chrome, Edge, or Firefox.',
@@ -94,6 +100,9 @@ export function useWeatherAssistant(weatherData) {
       clearTimeout(stallTimer);
       if (settled) return;
       settled = true;
+      // Otherwise the rejected promise stays cached at module scope and
+      // "Try Again" would just replay the same stale failure forever.
+      resetEngine();
       setErrorMsg(err?.message ?? 'Failed to load the assistant model.');
       setStatus('error');
     }
@@ -111,7 +120,7 @@ export function useWeatherAssistant(weatherData) {
     try {
       const chatMessages = [
         { role: 'system', content: buildSystemPrompt(weatherData, units, location) },
-        ...nextMessages,
+        ...nextMessages.slice(-MAX_HISTORY_MESSAGES),
       ];
       const stream = await engine.chat.completions.create({
         messages: chatMessages,

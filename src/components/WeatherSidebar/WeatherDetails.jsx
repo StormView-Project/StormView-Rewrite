@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import {
   Droplets, Wind, Eye, Gauge, Thermometer,
   Sun, Cloud, ArrowUp, Activity,
 } from 'lucide-react';
+import { PrecipDetailModal } from './PrecipDetailModal';
 import useAppStore from '../../store/useAppStore';
 import './WeatherDetails.css';
 
@@ -34,8 +36,10 @@ function windDirLabel(deg) {
 export function WeatherDetails({ data }) {
   const units = useAppStore((s) => s.units);
   const detailsFields = useAppStore((s) => s.detailsFields);
+  const [precipModalOpen, setPrecipModalOpen] = useState(false);
   const cu = data.current;
   const aq = data.airQuality ?? {};
+  const today = data.daily?.[0];
 
   const speedUnit = units === 'imperial' ? 'mph' : 'km/h';
   const distUnit  = units === 'imperial' ? 'mi' : 'km';
@@ -99,11 +103,19 @@ export function WeatherDetails({ data }) {
     {
       key: 'precip',
       icon: <ArrowUp size={15} strokeWidth={1.8} />,
-      label: 'Precip.',
-      value: cu.precipitation != null
-        ? `${cu.precipitation} ${units === 'imperial' ? 'in' : 'mm'}`
-        : (cu.precipProb != null ? `${cu.precipProb}% chance` : '—'),
+      label: 'Precip. Today',
+      // `cu.precipitation` is only the CURRENT HOUR's amount, not a running
+      // total — showing it as "today's precip" massively understated actual
+      // rainfall (e.g. 0.004in mid-storm). Use the day's accumulated total
+      // instead, falling back through what's actually available.
+      value: today?.precipSum != null
+        ? `${today.precipSum} ${units === 'imperial' ? 'in' : 'mm'}`
+        : cu.precipitation != null
+          ? `${cu.precipitation} ${units === 'imperial' ? 'in' : 'mm'}`
+          : (cu.precipProb != null ? `${cu.precipProb}% chance` : '—'),
+      sub: 'Tap for hourly breakdown',
       color: '#60A5FA',
+      onClick: () => setPrecipModalOpen(true),
     },
     aq.us_aqi != null ? {
       key: 'aqi',
@@ -123,19 +135,30 @@ export function WeatherDetails({ data }) {
     <div className="weather-details sidebar-section">
       <div className="sidebar-section-title">Details</div>
       <div className="details-grid">
-        {items.map((item) => (
-          <div key={item.label} className="detail-card">
-            <div className="detail-icon" style={{ color: item.color }}>{item.icon}</div>
-            <div className="detail-info">
-              <div className="detail-label">{item.label}</div>
-              <div className="detail-value" style={item.valueColor ? { color: item.valueColor } : {}}>
-                {item.value}
+        {items.map((item) => {
+          const Tag = item.onClick ? 'button' : 'div';
+          return (
+            <Tag
+              key={item.label}
+              className={`detail-card${item.onClick ? ' detail-card--clickable' : ''}`}
+              onClick={item.onClick}
+            >
+              <div className="detail-icon" style={{ color: item.color }}>{item.icon}</div>
+              <div className="detail-info">
+                <div className="detail-label">{item.label}</div>
+                <div className="detail-value" style={item.valueColor ? { color: item.valueColor } : {}}>
+                  {item.value}
+                </div>
+                {item.sub && <div className="detail-sub">{item.sub}</div>}
               </div>
-              {item.sub && <div className="detail-sub">{item.sub}</div>}
-            </div>
-          </div>
-        ))}
+            </Tag>
+          );
+        })}
       </div>
+
+      {precipModalOpen && (
+        <PrecipDetailModal data={data} onClose={() => setPrecipModalOpen(false)} />
+      )}
     </div>
   );
 }

@@ -88,13 +88,17 @@ function dayLabel(date, index) {
 /**
  * Condenses the app's live weather data into a system-prompt block.
  *
- * The local model here is very small (~1B params) and reliably botches
- * multi-step numeric reasoning — e.g. finding the min/max across a list of
- * days, or keeping track of which number belongs to which day when they're
- * packed onto one line. So this does two things a bigger model wouldn't need:
- * one forecast day per line with everything spelled out (not `H68/L46`), and
- * precomputed answers to the questions users actually ask ("which day is
- * coldest") so the model only has to relay a fact instead of computing one.
+ * The local model here is small and can botch multi-step numeric reasoning
+ * over a dense one-line list — e.g. keeping track of which number belongs to
+ * which day when they're packed onto one line — so each forecast day/hour
+ * gets spelled out on its own line instead of compressed (`H68/L46`).
+ *
+ * This used to also inject a precomputed "coldest/hottest day" answer so the
+ * model didn't have to compute one itself, but that backfired: a highly
+ * salient ready-made sentence sitting in the prompt made the model latch onto
+ * it and answer THAT regardless of what was actually asked (e.g. asking about
+ * precipitation and getting the coldest-day answer back). Removed — the model
+ * now has to read the actual table and answer the actual question.
  */
 export function buildWeatherContext(weatherData, units, location) {
   if (!weatherData) return 'No weather data is currently loaded for the user.';
@@ -151,15 +155,6 @@ export function buildWeatherContext(weatherData, units, location) {
         (d.precipProb != null ? `, ${d.precipProb}% chance of precipitation` : '')
       );
     });
-
-    const coldest = daily.reduce((a, b, i) => (b.tempMin < a.day.tempMin ? { day: b, i } : a), { day: daily[0], i: 0 });
-    const hottest = daily.reduce((a, b, i) => (b.tempMax > a.day.tempMax ? { day: b, i } : a), { day: daily[0], i: 0 });
-    lines.push('');
-    lines.push(
-      `Precomputed answer — the coldest day (lowest low temperature) is ${dayLabel(coldest.day.date, coldest.i)} ` +
-      `at ${fmt(coldest.day.tempMin)}${tempUnit}. The hottest day (highest high temperature) is ` +
-      `${dayLabel(hottest.day.date, hottest.i)} at ${fmt(hottest.day.tempMax)}${tempUnit}.`
-    );
   }
 
   const alerts = weatherData.alerts ?? [];
@@ -179,11 +174,14 @@ export function buildWeatherContext(weatherData, units, location) {
 
 export function buildSystemPrompt(weatherData, units, location) {
   return (
-    'You are StormView\'s weather assistant, embedded in a weather radar app. ' +
-    'Answer questions using ONLY the data below — never invent or recompute numbers. ' +
-    'When asked to compare days (e.g. "which day is coldest"), use the line ' +
-    'starting with "Precomputed answer" verbatim rather than working it out yourself. ' +
-    'Be concise and conversational.\n\n' +
+    'You are StormView\'s weather assistant, embedded in a weather radar app.\n' +
+    'Rules:\n' +
+    '1. Read the user\'s question carefully and answer ONLY that question. ' +
+    'If they ask about precipitation, answer about precipitation — not temperature, ' +
+    'wind, or anything else, even if you discussed something else earlier in the conversation.\n' +
+    '2. Use ONLY the numbers in the data below — never invent, guess, or recompute a ' +
+    'number that isn\'t already there.\n' +
+    '3. Be concise and conversational.\n\n' +
     buildWeatherContext(weatherData, units, location)
   );
 }

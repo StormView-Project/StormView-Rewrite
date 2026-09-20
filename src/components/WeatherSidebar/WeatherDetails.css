@@ -18,6 +18,20 @@
   background: var(--surface-active);
 }
 
+/* .detail-card is sometimes rendered as a <button> (e.g. Precip. Today, which
+   opens the hourly breakdown) — undo the browser's default button styling so
+   it matches the plain-div cards exactly. */
+.detail-card--clickable {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.detail-card--clickable:hover {
+  border-color: var(--accent);
+}
+
 .detail-icon {
   flex-shrink: 0;
   margin-top: 1px;
