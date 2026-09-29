@@ -18,6 +18,8 @@ export const WIDGET_LABELS = {
   uvIndex: 'UV Index',
   moonPhase: 'Moon Phase',
   outlook: "Today's Outlook",
+  futureWeather: 'Future Weather',
+  monthOutlook: 'Month Outlook',
 };
 
 export const DEFAULT_WIDGETS = [
@@ -34,6 +36,8 @@ export const DEFAULT_WIDGETS = [
   { id: 'uvIndex', enabled: false },
   { id: 'moonPhase', enabled: false },
   { id: 'outlook', enabled: false },
+  { id: 'futureWeather', enabled: false },
+  { id: 'monthOutlook', enabled: false },
 ];
 
 /** Individual info cards inside the "Weather Details" widget — each can be
