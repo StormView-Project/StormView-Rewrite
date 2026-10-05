@@ -45,7 +45,7 @@ export function WeatherContent({ weatherData, loading, error, onOpenSettings }) 
           onClick={onOpenSettings}
           style={{
             marginTop: 8, padding: '8px 16px',
-            background: 'var(--accent)', color: '#fff',
+            background: 'var(--accent)', color: 'var(--on-accent, #fff)',
             border: 'none', borderRadius: 'var(--radius-sm)',
             cursor: 'pointer', fontSize: 13, fontWeight: 500,
           }}

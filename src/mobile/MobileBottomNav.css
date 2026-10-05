@@ -1,0 +1,63 @@
+.mobile-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 480; /* above .app-bottom-stack (450), below the settings overlay */
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.mobile-bottom-nav-item--active {
+  color: var(--accent);
+}
+
+.mobile-bottom-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  transition: background 0.2s ease;
+}
+.mobile-bottom-nav-item--active .mobile-bottom-nav-icon {
+  background: var(--accent-dim);
+}
+
+.mobile-bottom-nav-label {
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+/* M3 Navigation Bar: a flat tonal surface instead of the app's usual glass
+   blur treatment, matching how every other Material-mode surface behaves
+   (elevation via tint, not blur/shadow). The pill active-indicator above is
+   already M3-shaped — this just swaps which surface it sits on. */
+[data-material="true"] .mobile-bottom-nav {
+  background: var(--surface-elevated);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 1px solid var(--border);
+}

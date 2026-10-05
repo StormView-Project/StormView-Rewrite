@@ -26,6 +26,7 @@
   --accent-light: #6fa6ff;
   --accent-dim: rgba(79, 142, 245, 0.14);
   --accent-glow: rgba(79, 142, 245, 0.35);
+  --on-accent: #ffffff; /* text/icon color for content sitting on a solid --accent fill */
 
   --nowcast-color: #34d399;
   --nowcast-dim: rgba(52, 211, 153, 0.14);
@@ -88,6 +89,7 @@
   --accent-light: #4a7ef5;
   --accent-dim: rgba(37, 99, 235, 0.10);
   --accent-glow: rgba(37, 99, 235, 0.25);
+  --on-accent: #ffffff;
 
   --nowcast-color: #059669;
   --nowcast-dim: rgba(5, 150, 105, 0.10);
@@ -264,4 +266,96 @@ html, body, #root {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
+}
+
+/* =====================================================
+   Material You mode — applies app-wide once <html data-material="true">
+   is set (src/hooks/useTheme.js). Colors/shape/elevation come from CSS
+   variables generated in src/utils/materialTheme.js and already cascade
+   everywhere automatically; this block adds the two things that genuinely
+   need new CSS: ripple containment + M3's "state layer" hover/press
+   feedback on every button (and every role="button" element, since some
+   clickable rows in this app — e.g. the daily forecast rows — are a <div
+   role="button"> rather than a real <button>).
+
+   Wrapped in :where(...), which always contributes ZERO specificity: a lot
+   of buttons in this app set their own `position` for real layout reasons
+   (e.g. .wa-fab's floating `position: fixed`) — without :where(), this
+   block's attribute+tag selector would actually OUTRANK a plain one-class
+   rule like `.wa-fab` and silently override `position: fixed` back to
+   `relative`, breaking the button's placement entirely. At zero specificity,
+   any existing rule for a property always wins here, and this only ever
+   acts as a fallback default for elements that don't already set it.
+   ===================================================== */
+:where(
+  [data-material="true"] button:not(:disabled),
+  [data-material="true"] [role="button"]:not([aria-disabled="true"])
+) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+:where(
+  [data-material="true"] button:not(:disabled),
+  [data-material="true"] [role="button"]:not([aria-disabled="true"])
+)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+:where(
+  [data-material="true"] button:not(:disabled):hover,
+  [data-material="true"] [role="button"]:not([aria-disabled="true"]):hover
+)::before {
+  opacity: 0.08;
+}
+:where(
+  [data-material="true"] button:not(:disabled):active,
+  [data-material="true"] [role="button"]:not([aria-disabled="true"]):active
+)::before {
+  opacity: 0.12;
+}
+
+.m3-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.18;
+  transform: scale(0);
+  animation: m3RippleExpand 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+@keyframes m3RippleExpand {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* M3 "Filled Button": the app's existing primary CTAs (Use My Location, Load
+   Assistant, Got it, etc.) already use --accent as a solid fill, but keep
+   the app's everyday 8-12px corner radius — next to actual M3 surfaces that
+   now use that same radius for everything, a filled CTA button stops reading
+   as a distinct "button" shape. M3's filled/tonal buttons are fully pill-
+   shaped, so that's the one deliberate, non-:where() override here — this
+   SHOULD win over each button's own single-class radius. */
+[data-material="true"] :is(
+  .geo-btn-primary, .wa-retry-btn, .m-empty-btn, .w-empty-btn,
+  .bm-btn--accent, .wn-btn-close
+) {
+  border-radius: var(--radius-pill);
+  box-shadow: none;
+}
+
+/* M3 "Outlined Button" — representative secondary-action treatment: no
+   fill, a real outline, accent-colored text, pill shape. */
+[data-material="true"] .wa-clear-btn {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+}
+[data-material="true"] .wa-clear-btn:hover {
+  background: var(--accent-dim);
 }

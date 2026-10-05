@@ -229,7 +229,7 @@
 .seg-btn:hover { color: var(--text-primary); }
 .seg-btn--active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
 }
 
 /* ---- Slider ---- */
@@ -391,6 +391,12 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 10px;
+}
+.custom-theme-picker--single {
+  display: block;
+}
+.custom-theme-picker--single .custom-theme-field {
+  width: 100%;
 }
 .custom-theme-field {
   display: flex;

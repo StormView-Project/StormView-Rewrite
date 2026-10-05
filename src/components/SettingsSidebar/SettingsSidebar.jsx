@@ -177,6 +177,14 @@ function DisplayTab() {
   const setColorPreset = useAppStore((s) => s.setColorPreset);
   const customTheme = useAppStore((s) => s.customTheme);
   const setCustomTheme = useAppStore((s) => s.setCustomTheme);
+  const materialYou = useAppStore((s) => s.materialYou);
+  const setMaterialYou = useAppStore((s) => s.setMaterialYou);
+  const customMode = useAppStore((s) => s.customMode);
+  const setCustomMode = useAppStore((s) => s.setCustomMode);
+  const materialSingleColor = useAppStore((s) => s.materialSingleColor);
+  const setMaterialSingleColor = useAppStore((s) => s.setMaterialSingleColor);
+  const materialSingleColorMode = useAppStore((s) => s.materialSingleColorMode);
+  const setMaterialSingleColorMode = useAppStore((s) => s.setMaterialSingleColorMode);
   const sidebarPosition = useAppStore((s) => s.sidebarPosition);
   const setSidebarPosition = useAppStore((s) => s.setSidebarPosition);
   const newMobileLayout = useAppStore((s) => s.newMobileLayout);
@@ -215,7 +223,55 @@ function DisplayTab() {
           })}
         </div>
 
-        {theme === 'custom' && (
+        <div className="settings-row" style={{ marginTop: 10 }}>
+          <div>
+            <div className="settings-row-label">Material You</div>
+            <div className="settings-row-sub">
+              Reskins the whole app with Google's real M3 color algorithm, shape
+              scale, and ripple/state-layer feedback — generated from your
+              current accent color.
+            </div>
+          </div>
+          <Toggle checked={materialYou} onChange={setMaterialYou} />
+        </div>
+
+        {theme === 'custom' && materialYou && (
+          <div className="settings-row" style={{ marginTop: 6 }}>
+            <div className="settings-row-label">Custom Mode</div>
+            <SegControl
+              options={[
+                { label: 'Full Palette', value: 'full' },
+                { label: 'Single Color', value: 'single' },
+              ]}
+              value={customMode}
+              onChange={setCustomMode}
+            />
+          </div>
+        )}
+
+        {theme === 'custom' && (materialYou && customMode === 'single' ? (
+          <div className="custom-theme-picker custom-theme-picker--single">
+            <label className="custom-theme-field">
+              <span>Seed Color</span>
+              <input
+                type="color"
+                value={materialSingleColor}
+                onChange={(e) => setMaterialSingleColor(e.target.value)}
+              />
+            </label>
+            <div className="settings-row" style={{ marginTop: 6 }}>
+              <div className="settings-row-label">Base</div>
+              <SegControl
+                options={[
+                  { label: 'Dark', value: 'dark' },
+                  { label: 'Light', value: 'light' },
+                ]}
+                value={materialSingleColorMode}
+                onChange={setMaterialSingleColorMode}
+              />
+            </div>
+          </div>
+        ) : (
           <div className="custom-theme-picker">
             {CUSTOM_COLOR_FIELDS.map((f) => (
               <label key={f.key} className="custom-theme-field">
@@ -228,7 +284,7 @@ function DisplayTab() {
               </label>
             ))}
           </div>
-        )}
+        ))}
       </div>
 
       {theme !== 'custom' && (

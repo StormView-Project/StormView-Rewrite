@@ -113,7 +113,7 @@ export function WeatherDetails({ data }) {
         : cu.precipitation != null
           ? `${cu.precipitation} ${units === 'imperial' ? 'in' : 'mm'}`
           : (cu.precipProb != null ? `${cu.precipProb}% chance` : '—'),
-      sub: 'Tap for hourly breakdown',
+      sub: '',
       color: '#60A5FA',
       onClick: () => setPrecipModalOpen(true),
     },

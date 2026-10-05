@@ -79,7 +79,7 @@
 }
 .notif-btn--on {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
 }
 .notif-btn--on:hover:not(:disabled) { opacity: 0.88; }
 

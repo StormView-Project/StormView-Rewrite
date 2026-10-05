@@ -21,6 +21,10 @@ const useAppStore = create(
       theme: 'light',           // 'dark' | 'light' | 'system' | 'custom' — the light/dark mode axis
       colorPreset: 'default',  // 'default' | 'ocean' | 'sunset' | 'forest' | 'crimson' — accent flavor, applied on top of the mode (ignored when theme === 'custom')
       customTheme: DEFAULT_CUSTOM_THEME,
+      materialYou: false,      // Material You (M3) rendering mode — reskins colors/shape/elevation from a seed color
+      customMode: 'full',      // 'full' (8-color picker) | 'single' (one seed color -> full Material You palette) — only meaningfully different when materialYou is on
+      materialSingleColor: '#4f8ef5', // seed color for customMode === 'single'
+      materialSingleColorMode: 'dark', // 'dark' | 'light' — which M3 scheme to generate from the single seed color (no bg color is picked in this mode to infer it from)
       widgets: DEFAULT_WIDGETS, // [{ id, enabled }] — order + visibility of optional home-screen sections
       detailsFields: DEFAULT_DETAILS_FIELDS, // { fieldKey: enabled } — which info cards show in the Weather Details widget
       aqiShowPollutants: true, // Air Quality widget: show the PM2.5/PM10/etc breakdown
@@ -64,6 +68,10 @@ const useAppStore = create(
       setTheme: (theme) => set({ theme }),
       setColorPreset: (colorPreset) => set({ colorPreset }),
       setCustomTheme: (patch) => set((s) => ({ customTheme: { ...s.customTheme, ...patch } })),
+      setMaterialYou: (v) => set({ materialYou: v }),
+      setCustomMode: (v) => set({ customMode: v }),
+      setMaterialSingleColor: (v) => set({ materialSingleColor: v }),
+      setMaterialSingleColorMode: (v) => set({ materialSingleColorMode: v }),
       setAssistantModel: (id) => set({ assistantModel: id }),
       setWidgetEnabled: (id, enabled) => set((s) => ({
         widgets: s.widgets.map((w) => (w.id === id ? { ...w, enabled } : w)),
@@ -179,6 +187,10 @@ const useAppStore = create(
         theme: s.theme,
         colorPreset: s.colorPreset,
         customTheme: s.customTheme,
+        materialYou: s.materialYou,
+        customMode: s.customMode,
+        materialSingleColor: s.materialSingleColor,
+        materialSingleColorMode: s.materialSingleColorMode,
         widgets: s.widgets,
         detailsFields: s.detailsFields,
         aqiShowPollutants: s.aqiShowPollutants,

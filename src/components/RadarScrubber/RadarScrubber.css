@@ -82,7 +82,7 @@
 .speed-btn:hover { color: var(--text-primary); }
 .speed-btn--active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
 }
 
 /* Time display */
