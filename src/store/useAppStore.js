@@ -40,6 +40,7 @@ const useAppStore = create(
       radarOpacity: 0.75,
       radarTileQuality: 512,   // URL image size: 256 (fast, blurry) or 512 (sharp)
       radarColorScheme: 7,     // 0-11 LibreWXR color scheme IDs (7 = Rainbow)
+      radarFrameFade: false,   // LibreWXR: crossfade between animation frames (off = instant, snappier playback)
       radarRenderer: 'wasm',   // LibreWXR: 'wasm' (raw tiles colored on-device) | 'server' (server-colored, with snow)
       showNowcast: true,
       showSatellite: false,
@@ -101,6 +102,7 @@ const useAppStore = create(
       setRadarTileQuality: (v) => set({ radarTileQuality: v }),
       setRadarColorScheme: (v) => set({ radarColorScheme: v }),
       setRadarRenderer: (v) => set({ radarRenderer: v }),
+      setRadarFrameFade: (v) => set({ radarFrameFade: v }),
       setShowNowcast: (v) => set({ showNowcast: v }),
       setShowSatellite: (v) => set({ showSatellite: v }),
       setShowAlertPolygons: (v) => set({ showAlertPolygons: v }),
@@ -209,6 +211,7 @@ const useAppStore = create(
         radarTileQuality: s.radarTileQuality,
         radarColorScheme: s.radarColorScheme,
         radarRenderer: s.radarRenderer,
+        radarFrameFade: s.radarFrameFade,
         showNowcast: s.showNowcast,
         showSatellite: s.showSatellite,
         showAlertPolygons: s.showAlertPolygons,

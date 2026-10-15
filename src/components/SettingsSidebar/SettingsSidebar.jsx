@@ -551,6 +551,8 @@ function RadarTab() {
   const radarColorScheme = useAppStore((s) => s.radarColorScheme);
   const setRadarColorScheme = useAppStore((s) => s.setRadarColorScheme);
   const radarRenderer = useAppStore((s) => s.radarRenderer);
+  const radarFrameFade = useAppStore((s) => s.radarFrameFade);
+  const setRadarFrameFade = useAppStore((s) => s.setRadarFrameFade);
   const setRadarRenderer = useAppStore((s) => s.setRadarRenderer);
   const showNowcast = useAppStore((s) => s.showNowcast);
   const setShowNowcast = useAppStore((s) => s.setShowNowcast);
@@ -730,6 +732,15 @@ function RadarTab() {
             label={radarSource === 'openmeteo' ? 'Show Forecast Steps' : 'Show 90-min Nowcast'}
           />
         </div>
+        {radarSource === 'stormcast' && (
+          <div className="settings-row">
+            <Toggle
+              checked={radarFrameFade}
+              onChange={setRadarFrameFade}
+              label="Fade Between Frames"
+            />
+          </div>
+        )}
         <div className="settings-row">
           <Toggle
             checked={showSatellite}

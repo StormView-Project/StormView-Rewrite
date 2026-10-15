@@ -14,7 +14,7 @@ import useAppStore from '../../store/useAppStore';
  *   - Dedicated 'radar' pane → own compositor layer (will-change: transform)
  *   - Per-container will-change: opacity → GPU opacity compositing
  *   - img.decoding = 'async' → PNG decode off main thread
- *   - CSS opacity transitions in MapView.css → GPU-animated crossfade
+ *   - CSS opacity transitions in MapView.css → GPU-animated crossfade (optional)
  *
  * Two tile paths:
  *   - wasm:   raw reflectivity tiles (3-5x smaller, one URL for every color
@@ -84,6 +84,7 @@ export function RadarLayer() {
   const showArrows  = useAppStore((s) => s.showArrows);
   const theme       = useAppStore((s) => s.theme);
   const renderer    = useAppStore((s) => s.radarRenderer);
+  const frameFade   = useAppStore((s) => s.radarFrameFade);
   const setProgress = useAppStore((s) => s.setRadarTileProgress);
 
   // dark UI → light arrows for contrast; light UI → dark arrows
@@ -112,6 +113,11 @@ export function RadarLayer() {
       pane.style.pointerEvents = 'none';
     }
   }, [map]);
+
+  /* ---- Crossfade between frames (CSS transition in MapView.css) ---- */
+  useEffect(() => {
+    map.getPane(RADAR_PANE)?.classList.toggle('radar-pane--fade', frameFade);
+  }, [map, frameFade]);
 
   /* ---- Cleanup on unmount ---- */
   useEffect(() => () => {
