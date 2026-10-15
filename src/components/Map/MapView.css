@@ -10,9 +10,12 @@
   filter: invert(100%) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.35);
 }
 
-/* GPU-accelerated radar pane: each tile-layer container crossfades on the GPU */
+/* GPU-accelerated radar pane: each tile-layer container switches opacity on
+   the GPU. Frames swap instantly unless "Fade Between Frames" is on. */
 .leaflet-radar-pane > div {
   will-change: opacity;
+}
+.leaflet-radar-pane.radar-pane--fade > div {
   transition: opacity 180ms linear;
 }
 
