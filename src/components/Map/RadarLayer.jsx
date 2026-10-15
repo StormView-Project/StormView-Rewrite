@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { getRadarTileUrl, RADAR_TILE_SIZE, RADAR_ZOOM_OFFSET } from '../../services/stormcast';
+import { getRadarTileUrl, getRawRadarTileUrl, RADAR_TILE_SIZE, RADAR_ZOOM_OFFSET } from '../../services/stormcast';
+import { WasmRadarTileLayer, isRadarWasmAvailable, onRadarWasmFailure } from '../../radar-wasm/radarRenderer';
 import useAppStore from '../../store/useAppStore';
 
 /**
@@ -14,6 +15,15 @@ import useAppStore from '../../store/useAppStore';
  *   - Per-container will-change: opacity → GPU opacity compositing
  *   - img.decoding = 'async' → PNG decode off main thread
  *   - CSS opacity transitions in MapView.css → GPU-animated crossfade
+ *
+ * Two tile paths:
+ *   - wasm:   raw reflectivity tiles (3-5x smaller, one URL for every color
+ *             scheme), colored + smoothed on-device by WebAssembly in a worker
+ *             (src/radar-wasm/).  Scheme changes and replays re-render from the
+ *             worker's raw cache without touching the network.
+ *   - server: finished PNGs from LibreWXR.  Used when motion arrows are on
+ *             (drawn server-side), for snow colors (needs the server's model
+ *             snow mask), or when the browser can't run the wasm renderer.
  */
 
 const PRELOAD_AHEAD = 4;
@@ -32,13 +42,21 @@ const TILE_OPTS = {
 
 /* ---- Layer helpers ---- */
 
-function frameKey(frame, cs, tq, arrows) {
-  return `${frame.path}:${cs}:${tq}:${arrows ?? 'none'}`;
+function frameKey(frame, cs, tq, arrows, wasm) {
+  return `${frame.path}:${cs}:${tq}:${arrows ?? 'none'}:${wasm ? 'wasm' : 'server'}`;
 }
 
-function getOrCreate(frame, cs, tq, arrows, cache) {
-  const k = frameKey(frame, cs, tq, arrows);
+function getOrCreate(frame, cs, tq, arrows, wasm, cache) {
+  const k = frameKey(frame, cs, tq, arrows, wasm);
   if (cache.has(k)) return [k, cache.get(k)];
+
+  if (wasm) {
+    const url = getRawRadarTileUrl({ host: frame.host, path: frame.path, size: tq });
+    const layer = new WasmRadarTileLayer(url, { ...TILE_OPTS, colorScheme: cs });
+    cache.set(k, layer);
+    return [k, layer];
+  }
+
   const url = getRadarTileUrl({ host: frame.host, path: frame.path, colorScheme: cs, size: tq, arrows });
   const layer = L.tileLayer(url, { ...TILE_OPTS });
 
@@ -65,11 +83,17 @@ export function RadarLayer() {
   const opacity     = useAppStore((s) => s.radarOpacity);
   const showArrows  = useAppStore((s) => s.showArrows);
   const theme       = useAppStore((s) => s.theme);
+  const renderer    = useAppStore((s) => s.radarRenderer);
   const setProgress = useAppStore((s) => s.setRadarTileProgress);
 
   // dark UI → light arrows for contrast; light UI → dark arrows
   const isDark    = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const arrowStyle = showArrows ? (isDark ? 'light' : 'dark') : null;
+
+  // Arrows are drawn into server tiles, so they force the server path.
+  const [wasmAvailable, setWasmAvailable] = useState(isRadarWasmAvailable);
+  useEffect(() => onRadarWasmFailure(() => setWasmAvailable(false)), []);
+  const useWasm = renderer === 'wasm' && wasmAvailable && !arrowStyle;
 
   const cache       = useRef(new Map());
   const readyKeys   = useRef(new Set());
@@ -136,7 +160,7 @@ export function RadarLayer() {
 
     const wanted = new Set();
     for (let j = 0; j < windowSize; j++) {
-      wanted.add(frameKey(frames[(currentIdx + j) % frames.length], cs, tileQuality, arrowStyle));
+      wanted.add(frameKey(frames[(currentIdx + j) % frames.length], cs, tileQuality, arrowStyle, useWasm));
     }
 
     // Evict stale layers (snapshot first to avoid mutating Map during iteration)
@@ -170,7 +194,7 @@ export function RadarLayer() {
 
     for (let j = 0; j < windowSize; j++) {
       const frame = frames[(currentIdx + j) % frames.length];
-      const [k, layer] = getOrCreate(frame, cs, tileQuality, arrowStyle, cache.current);
+      const [k, layer] = getOrCreate(frame, cs, tileQuality, arrowStyle, useWasm, cache.current);
 
       if (!layer._map) {
         layer.addTo(map);
@@ -209,14 +233,14 @@ export function RadarLayer() {
     }
 
     // Show current frame (CSS transition in MapView.css crossfades on GPU)
-    const [k, layer] = getOrCreate(frames[currentIdx], cs, tileQuality, arrowStyle, cache.current);
+    const [k, layer] = getOrCreate(frames[currentIdx], cs, tileQuality, arrowStyle, useWasm, cache.current);
     if (activeKey.current && activeKey.current !== k) {
       cache.current.get(activeKey.current)?.setOpacity(0);
     }
     layer.setOpacity(useAppStore.getState().radarOpacity);
     activeKey.current = k;
 
-  }, [map, frames, currentIdx, cs, tileQuality, arrowStyle, setProgress, viewEpoch]);
+  }, [map, frames, currentIdx, cs, tileQuality, arrowStyle, useWasm, setProgress, viewEpoch]);
 
   /* ---- Opacity slider ---- */
   useEffect(() => {

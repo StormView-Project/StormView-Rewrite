@@ -34,12 +34,13 @@ const useAppStore = create(
       sidebarPosition: 'left', // 'left' | 'right'
       newMobileLayout: true,   // use the dedicated mobile weather page on phones
       watchRoundDisplay: false, // watch mode: optimise layout for a circular screen
-      radarSource: 'openmeteo', // 'stormcast' (LibreWXR) | 'openmeteo' (Open-Meteo maps)
+      radarSource: 'stormcast', // 'stormcast' (LibreWXR) | 'openmeteo' (Open-Meteo maps)
       openmeteoDomain: 'ncep_hrrr_conus',        // which Open-Meteo weather model
       openmeteoVariable: 'precipitation', // which Open-Meteo map layer to render
       radarOpacity: 0.75,
       radarTileQuality: 512,   // URL image size: 256 (fast, blurry) or 512 (sharp)
       radarColorScheme: 7,     // 0-11 LibreWXR color scheme IDs (7 = Rainbow)
+      radarRenderer: 'wasm',   // LibreWXR: 'wasm' (raw tiles colored on-device) | 'server' (server-colored, with snow)
       showNowcast: true,
       showSatellite: false,
       showAlertPolygons: true,
@@ -99,6 +100,7 @@ const useAppStore = create(
       setRadarOpacity: (v) => set({ radarOpacity: v }),
       setRadarTileQuality: (v) => set({ radarTileQuality: v }),
       setRadarColorScheme: (v) => set({ radarColorScheme: v }),
+      setRadarRenderer: (v) => set({ radarRenderer: v }),
       setShowNowcast: (v) => set({ showNowcast: v }),
       setShowSatellite: (v) => set({ showSatellite: v }),
       setShowAlertPolygons: (v) => set({ showAlertPolygons: v }),
@@ -206,6 +208,7 @@ const useAppStore = create(
         radarOpacity: s.radarOpacity,
         radarTileQuality: s.radarTileQuality,
         radarColorScheme: s.radarColorScheme,
+        radarRenderer: s.radarRenderer,
         showNowcast: s.showNowcast,
         showSatellite: s.showSatellite,
         showAlertPolygons: s.showAlertPolygons,
