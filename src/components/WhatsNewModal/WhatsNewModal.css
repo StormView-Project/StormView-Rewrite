@@ -216,7 +216,7 @@
 .wn-btn-close {
   padding: 9px 22px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 13px;

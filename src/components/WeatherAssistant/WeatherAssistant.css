@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   cursor: pointer;
   box-shadow: var(--shadow-md);
@@ -113,7 +113,7 @@
   font-size: 12px;
   font-weight: 500;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -161,7 +161,7 @@
 .wa-msg--user {
   align-self: flex-end;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border-bottom-right-radius: var(--radius-xs);
 }
 .wa-msg--assistant {
@@ -196,7 +196,7 @@
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;

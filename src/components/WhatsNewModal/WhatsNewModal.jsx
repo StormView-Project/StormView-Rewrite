@@ -1,41 +1,55 @@
 import { useState } from 'react';
-import { X, LayoutGrid, Palette, Sparkles, Activity } from 'lucide-react';
+import { X, Zap, CalendarRange, LayoutGrid, Smartphone, CloudRain, Activity } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 import './WhatsNewModal.css';
 
 // ─── DEVELOPER: bump version to re-show for all users; set name for this release ─
-export const WHATS_NEW_VERSION = '3.6.0';
-export const WHATS_NEW_NAME    = 'Widgets, themes & AI assistant';
+export const WHATS_NEW_VERSION = '3.7.0';
+export const WHATS_NEW_NAME    = 'Faster radar & long-range outlooks';
 // ─────────────────────────────────────────────────────────────────────────────────
 
 const FEATURES = [
   {
+    icon: Zap,
+    color: '#f59e0b',
+    bg: 'rgba(245,158,11,0.12)',
+    title: 'Faster LibreWXR Radar',
+    desc: 'LibreWXR radar is now colored right on your device, so it downloads less than half the data and switching color schemes is instant. Want snow shown in its own colors? Set Rendering to Server under Settings → Radar.',
+  },
+  {
+    icon: CalendarRange,
+    color: '#38bdf8',
+    bg: 'rgba(56,189,248,0.12)',
+    title: 'Future Weather & Month Outlook',
+    desc: 'Two new widgets look up to about 7 months ahead: pick a date or a whole month to see the expected temperatures and precipitation. These are long-range estimates, not exact forecasts. Turn them on in the Widgets tab.',
+  },
+  {
     icon: LayoutGrid,
     color: '#22c55e',
     bg: 'rgba(34,197,94,0.12)',
-    title: 'Customizable Widgets',
-    desc: 'A new Widgets tab in Settings lets you show, hide, and reorder your homepage sections — plus three new ones to add: Sunrise & Sunset, Air Quality, and a Wind Compass.',
+    title: 'Even More Widgets',
+    desc: 'Add Feels Like, Today\'s Outlook, Precipitation Outlook, Daylight, UV Index, and Moon Phase to your homepage from the Widgets tab.',
   },
   {
-    icon: Palette,
+    icon: Smartphone,
     color: '#a855f7',
     bg: 'rgba(168,85,247,0.12)',
-    title: 'More Color Themes',
-    desc: 'Four new built-in themes — Ocean, Sunset, Forest, and Crimson — plus a full custom theme builder to pick your own background, accent, and text colors.',
+    title: 'New Mobile Tab Bar',
+    desc: 'On phones, a bar along the bottom now jumps between Home, Radar, and Settings in one tap.',
   },
   {
-    icon: Sparkles,
-    color: '#38bdf8',
-    bg: 'rgba(56,189,248,0.12)',
-    title: 'On-Device Weather Assistant',
-    desc: 'A new floating chat button runs a small AI model right in your browser — nothing is sent to a server. Ask it about your forecast, alerts, or air quality and it answers using your real, live data.',
+    icon: CloudRain,
+    color: '#60a5fa',
+    bg: 'rgba(96,165,250,0.12)',
+    title: 'Hourly Precipitation',
+    desc: 'Tap the Precip. card in Weather Details to see how today\'s rain or snow is spread across each hour.',
   },
   {
     icon: Activity,
     color: 'var(--accent)',
     bg: 'var(--accent-dim)',
     title: 'Bug Fixes & Improvements',
-    desc: 'Don\'t need to explain this one really.',
+    desc: 'The weather assistant now answers the question you actually asked, plus plenty of smaller fixes.',
   },
 ];
 

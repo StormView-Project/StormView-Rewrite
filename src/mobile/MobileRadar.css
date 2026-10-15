@@ -38,3 +38,8 @@
 .mobile-radar .leaflet-top.leaflet-left {
   margin-top: calc(58px + env(safe-area-inset-top));
 }
+
+/* Raise the radar scrubber to clear the persistent MobileBottomNav (60px). */
+.mobile-radar .app-bottom-stack--mobile {
+  bottom: calc(12px + 60px);
+}

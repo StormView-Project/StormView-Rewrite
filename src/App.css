@@ -162,7 +162,7 @@
 .geo-btn-primary {
   padding: 11px 20px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 14px;

@@ -1,19 +1,19 @@
 /** Small hex-color helpers used to derive a full custom theme from a
  *  handful of user-picked base colors, and to preview presets in Settings. */
 
-function hexToRgb(hex) {
+export function hexToRgb(hex) {
   const h = hex.replace('#', '');
   const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
   const num = parseInt(full, 16);
   return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
-function rgba(hex, alpha) {
+export function rgba(hex, alpha) {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function mix(hexA, hexB, weight) {
+export function mix(hexA, hexB, weight) {
   const a = hexToRgb(hexA);
   const b = hexToRgb(hexB);
   const r = Math.round(a.r + (b.r - a.r) * weight);
@@ -137,6 +137,7 @@ export function deriveThemeVars(custom) {
     '--accent-light': mix(accent, '#ffffff', 0.25),
     '--accent-dim': rgba(accent, isDark ? 0.14 : 0.10),
     '--accent-glow': rgba(accent, isDark ? 0.35 : 0.25),
+    '--on-accent': '#ffffff',
 
     '--nowcast-color': isDark ? '#34d399' : '#059669',
     '--nowcast-dim': isDark ? 'rgba(52, 211, 153, 0.14)' : 'rgba(5, 150, 105, 0.10)',

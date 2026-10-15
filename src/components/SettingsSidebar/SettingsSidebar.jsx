@@ -7,6 +7,7 @@ import { fetchOpenMeteoLayers, DOMAINS } from '../../services/openmeteoRadar';
 import { WIDGET_REGISTRY, DETAILS_FIELD_LABELS } from '../widgets/registry';
 import { MODE_OPTIONS, COLOR_PRESET_OPTIONS, PRESET_PREVIEW, isLightBg } from '../../utils/themeColor';
 import { useIsWatch } from '../../hooks/useIsWatch';
+import { radarWasmSupported } from '../../radar-wasm/radarRenderer';
 import useAppStore from '../../store/useAppStore';
 import './SettingsSidebar.css';
 
@@ -177,12 +178,23 @@ function DisplayTab() {
   const setColorPreset = useAppStore((s) => s.setColorPreset);
   const customTheme = useAppStore((s) => s.customTheme);
   const setCustomTheme = useAppStore((s) => s.setCustomTheme);
+  const materialYou = useAppStore((s) => s.materialYou);
+  const setMaterialYou = useAppStore((s) => s.setMaterialYou);
+  const customMode = useAppStore((s) => s.customMode);
+  const setCustomMode = useAppStore((s) => s.setCustomMode);
+  const materialSingleColor = useAppStore((s) => s.materialSingleColor);
+  const setMaterialSingleColor = useAppStore((s) => s.setMaterialSingleColor);
+  const materialSingleColorMode = useAppStore((s) => s.materialSingleColorMode);
+  const setMaterialSingleColorMode = useAppStore((s) => s.setMaterialSingleColorMode);
   const sidebarPosition = useAppStore((s) => s.sidebarPosition);
   const setSidebarPosition = useAppStore((s) => s.setSidebarPosition);
   const newMobileLayout = useAppStore((s) => s.newMobileLayout);
   const setNewMobileLayout = useAppStore((s) => s.setNewMobileLayout);
   const watchRoundDisplay = useAppStore((s) => s.watchRoundDisplay);
   const setWatchRoundDisplay = useAppStore((s) => s.setWatchRoundDisplay);
+  // Material You is still a work in progress, so it lives in a collapsed
+  // Experimental section — opened by default only if it's already turned on.
+  const [experimentalOpen, setExperimentalOpen] = useState(materialYou);
 
   // A read-only echo of useTheme()'s own resolution — used only to preview
   // color-preset swatches in the right mode, not to apply anything itself.
@@ -215,7 +227,29 @@ function DisplayTab() {
           })}
         </div>
 
-        {theme === 'custom' && (
+        {theme === 'custom' && (materialYou && customMode === 'single' ? (
+          <div className="custom-theme-picker custom-theme-picker--single">
+            <label className="custom-theme-field">
+              <span>Seed Color</span>
+              <input
+                type="color"
+                value={materialSingleColor}
+                onChange={(e) => setMaterialSingleColor(e.target.value)}
+              />
+            </label>
+            <div className="settings-row" style={{ marginTop: 6 }}>
+              <div className="settings-row-label">Base</div>
+              <SegControl
+                options={[
+                  { label: 'Dark', value: 'dark' },
+                  { label: 'Light', value: 'light' },
+                ]}
+                value={materialSingleColorMode}
+                onChange={setMaterialSingleColorMode}
+              />
+            </div>
+          </div>
+        ) : (
           <div className="custom-theme-picker">
             {CUSTOM_COLOR_FIELDS.map((f) => (
               <label key={f.key} className="custom-theme-field">
@@ -228,7 +262,7 @@ function DisplayTab() {
               </label>
             ))}
           </div>
-        )}
+        ))}
       </div>
 
       {theme !== 'custom' && (
@@ -308,6 +342,52 @@ function DisplayTab() {
             Clear
           </button>
         </div>
+      </div>
+
+      <div className="settings-group">
+        <button
+          className="settings-group-label settings-experimental-toggle"
+          aria-expanded={experimentalOpen}
+          onClick={() => setExperimentalOpen((o) => !o)}
+        >
+          Experimental
+          <ChevronDown
+            size={12}
+            strokeWidth={2.5}
+            className={experimentalOpen ? 'settings-experimental-chevron--open' : ''}
+          />
+        </button>
+
+        {experimentalOpen && (
+          <>
+            <div className="settings-row">
+              <div>
+                <div className="settings-row-label">Material You</div>
+                <div className="settings-row-sub">
+                  Work in progress — some screens may look off. Reskins the whole
+                  app with Google's real M3 color algorithm, shape scale, and
+                  ripple/state-layer feedback, generated from your current accent
+                  color.
+                </div>
+              </div>
+              <Toggle checked={materialYou} onChange={setMaterialYou} />
+            </div>
+
+            {theme === 'custom' && materialYou && (
+              <div className="settings-row" style={{ marginTop: 6 }}>
+                <div className="settings-row-label">Custom Mode</div>
+                <SegControl
+                  options={[
+                    { label: 'Full Palette', value: 'full' },
+                    { label: 'Single Color', value: 'single' },
+                  ]}
+                  value={customMode}
+                  onChange={setCustomMode}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </>
   );
@@ -470,6 +550,8 @@ function RadarTab() {
   const setRadarTileQuality = useAppStore((s) => s.setRadarTileQuality);
   const radarColorScheme = useAppStore((s) => s.radarColorScheme);
   const setRadarColorScheme = useAppStore((s) => s.setRadarColorScheme);
+  const radarRenderer = useAppStore((s) => s.radarRenderer);
+  const setRadarRenderer = useAppStore((s) => s.setRadarRenderer);
   const showNowcast = useAppStore((s) => s.showNowcast);
   const setShowNowcast = useAppStore((s) => s.setShowNowcast);
   const showSatellite = useAppStore((s) => s.showSatellite);
@@ -607,6 +689,28 @@ function RadarTab() {
               ]}
               value={radarTileQuality}
               onChange={setRadarTileQuality}
+            />
+          </div>
+        )}
+        {radarSource === 'stormcast' && radarWasmSupported && (
+          <div className="settings-row" style={{ marginBottom: 6 }}>
+            <div>
+              <div className="settings-row-label">Rendering</div>
+              <div className="settings-row-sub">
+                {radarRenderer === 'wasm'
+                  ? showArrows
+                    ? 'On-device — paused while Storm Motion Arrows are on (the server draws them)'
+                    : 'On-device — smaller downloads and instant color changes; snow shows in rain colors'
+                  : 'Server — LibreWXR colors each tile, including snow'}
+              </div>
+            </div>
+            <SegControl
+              options={[
+                { label: 'Device', value: 'wasm' },
+                { label: 'Server', value: 'server' },
+              ]}
+              value={radarRenderer}
+              onChange={setRadarRenderer}
             />
           </div>
         )}

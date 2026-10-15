@@ -17,6 +17,7 @@ import { MobileApp } from './mobile/MobileApp';
 import { WatchApp } from './watch/WatchApp';
 import { useWeather } from './hooks/useWeather';
 import { useTheme } from './hooks/useTheme';
+import { useMaterialRipple } from './hooks/useMaterialRipple';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useIsWatch } from './hooks/useIsWatch';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -53,6 +54,7 @@ function GeoModal({ onAccept, onManual, loading, error }) {
 
 export default function App() {
   useTheme();
+  useMaterialRipple();
   const isMobile = useIsMobile();
   const isWatch = useIsWatch();
 

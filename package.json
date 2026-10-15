@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:wasm": "./scripts/build-radar-wasm.sh",
+    "gen:radar-colors": "node scripts/gen-radar-colors.mjs"
   },
   "dependencies": {
+    "@material/material-color-utilities": "^0.4.0",
     "@mlc-ai/web-llm": "^0.2.85",
     "@openmeteo/weather-map-layer": "^0.1.0",
     "date-fns": "^3.6.0",

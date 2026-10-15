@@ -128,6 +128,28 @@
   margin-bottom: 10px;
 }
 
+/* Collapsible "Experimental" header — a settings-group-label that toggles */
+.settings-experimental-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.settings-experimental-toggle:hover {
+  color: var(--text-secondary);
+}
+.settings-experimental-toggle svg {
+  transition: transform 150ms ease;
+}
+.settings-experimental-chevron--open {
+  transform: rotate(180deg);
+}
+
 /* ---- Setting row ---- */
 .settings-row {
   display: flex;
@@ -229,7 +251,7 @@
 .seg-btn:hover { color: var(--text-primary); }
 .seg-btn--active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
 }
 
 /* ---- Slider ---- */
@@ -391,6 +413,12 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 10px;
+}
+.custom-theme-picker--single {
+  display: block;
+}
+.custom-theme-picker--single .custom-theme-field {
+  width: 100%;
 }
 .custom-theme-field {
   display: flex;

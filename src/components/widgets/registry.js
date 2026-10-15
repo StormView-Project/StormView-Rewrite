@@ -11,6 +11,8 @@ import { Daylight } from './Daylight';
 import { UVIndexWidget } from './UVIndexWidget';
 import { MoonPhase } from './MoonPhase';
 import { TodaysOutlook } from './TodaysOutlook';
+import { FutureWeather } from './FutureWeather';
+import { MonthOutlook } from './MonthOutlook';
 import { WIDGET_LABELS } from './defaults';
 
 /**
@@ -33,6 +35,8 @@ export const WIDGET_REGISTRY = {
   uvIndex: { label: WIDGET_LABELS.uvIndex, Component: UVIndexWidget },
   moonPhase: { label: WIDGET_LABELS.moonPhase, Component: MoonPhase },
   outlook: { label: WIDGET_LABELS.outlook, Component: TodaysOutlook },
+  futureWeather: { label: WIDGET_LABELS.futureWeather, Component: FutureWeather },
+  monthOutlook: { label: WIDGET_LABELS.monthOutlook, Component: MonthOutlook },
 };
 
 export { DEFAULT_WIDGETS, DETAILS_FIELD_LABELS, DEFAULT_DETAILS_FIELDS } from './defaults';

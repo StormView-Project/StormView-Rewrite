@@ -10,7 +10,9 @@
   background: var(--bg);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding: 0 12px calc(40px + env(safe-area-inset-bottom));
+  /* 60px clears the persistent MobileBottomNav (its own safe-area padding
+     already accounts for the inset, so this only needs the bar's height). */
+  padding: 0 12px calc(40px + 60px + env(safe-area-inset-bottom));
 }
 
 /* ---- Header ---- */
@@ -207,7 +209,7 @@
   margin-top: 4px;
   padding: 9px 18px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 13px;

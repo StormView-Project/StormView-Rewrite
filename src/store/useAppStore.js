@@ -21,6 +21,10 @@ const useAppStore = create(
       theme: 'light',           // 'dark' | 'light' | 'system' | 'custom' — the light/dark mode axis
       colorPreset: 'default',  // 'default' | 'ocean' | 'sunset' | 'forest' | 'crimson' — accent flavor, applied on top of the mode (ignored when theme === 'custom')
       customTheme: DEFAULT_CUSTOM_THEME,
+      materialYou: false,      // Material You (M3) rendering mode — reskins colors/shape/elevation from a seed color
+      customMode: 'full',      // 'full' (8-color picker) | 'single' (one seed color -> full Material You palette) — only meaningfully different when materialYou is on
+      materialSingleColor: '#4f8ef5', // seed color for customMode === 'single'
+      materialSingleColorMode: 'dark', // 'dark' | 'light' — which M3 scheme to generate from the single seed color (no bg color is picked in this mode to infer it from)
       widgets: DEFAULT_WIDGETS, // [{ id, enabled }] — order + visibility of optional home-screen sections
       detailsFields: DEFAULT_DETAILS_FIELDS, // { fieldKey: enabled } — which info cards show in the Weather Details widget
       aqiShowPollutants: true, // Air Quality widget: show the PM2.5/PM10/etc breakdown
@@ -30,12 +34,13 @@ const useAppStore = create(
       sidebarPosition: 'left', // 'left' | 'right'
       newMobileLayout: true,   // use the dedicated mobile weather page on phones
       watchRoundDisplay: false, // watch mode: optimise layout for a circular screen
-      radarSource: 'openmeteo', // 'stormcast' (LibreWXR) | 'openmeteo' (Open-Meteo maps)
+      radarSource: 'stormcast', // 'stormcast' (LibreWXR) | 'openmeteo' (Open-Meteo maps)
       openmeteoDomain: 'ncep_hrrr_conus',        // which Open-Meteo weather model
       openmeteoVariable: 'precipitation', // which Open-Meteo map layer to render
       radarOpacity: 0.75,
       radarTileQuality: 512,   // URL image size: 256 (fast, blurry) or 512 (sharp)
       radarColorScheme: 7,     // 0-11 LibreWXR color scheme IDs (7 = Rainbow)
+      radarRenderer: 'wasm',   // LibreWXR: 'wasm' (raw tiles colored on-device) | 'server' (server-colored, with snow)
       showNowcast: true,
       showSatellite: false,
       showAlertPolygons: true,
@@ -64,6 +69,10 @@ const useAppStore = create(
       setTheme: (theme) => set({ theme }),
       setColorPreset: (colorPreset) => set({ colorPreset }),
       setCustomTheme: (patch) => set((s) => ({ customTheme: { ...s.customTheme, ...patch } })),
+      setMaterialYou: (v) => set({ materialYou: v }),
+      setCustomMode: (v) => set({ customMode: v }),
+      setMaterialSingleColor: (v) => set({ materialSingleColor: v }),
+      setMaterialSingleColorMode: (v) => set({ materialSingleColorMode: v }),
       setAssistantModel: (id) => set({ assistantModel: id }),
       setWidgetEnabled: (id, enabled) => set((s) => ({
         widgets: s.widgets.map((w) => (w.id === id ? { ...w, enabled } : w)),
@@ -91,6 +100,7 @@ const useAppStore = create(
       setRadarOpacity: (v) => set({ radarOpacity: v }),
       setRadarTileQuality: (v) => set({ radarTileQuality: v }),
       setRadarColorScheme: (v) => set({ radarColorScheme: v }),
+      setRadarRenderer: (v) => set({ radarRenderer: v }),
       setShowNowcast: (v) => set({ showNowcast: v }),
       setShowSatellite: (v) => set({ showSatellite: v }),
       setShowAlertPolygons: (v) => set({ showAlertPolygons: v }),
@@ -179,6 +189,10 @@ const useAppStore = create(
         theme: s.theme,
         colorPreset: s.colorPreset,
         customTheme: s.customTheme,
+        materialYou: s.materialYou,
+        customMode: s.customMode,
+        materialSingleColor: s.materialSingleColor,
+        materialSingleColorMode: s.materialSingleColorMode,
         widgets: s.widgets,
         detailsFields: s.detailsFields,
         aqiShowPollutants: s.aqiShowPollutants,
@@ -194,6 +208,7 @@ const useAppStore = create(
         radarOpacity: s.radarOpacity,
         radarTileQuality: s.radarTileQuality,
         radarColorScheme: s.radarColorScheme,
+        radarRenderer: s.radarRenderer,
         showNowcast: s.showNowcast,
         showSatellite: s.showSatellite,
         showAlertPolygons: s.showAlertPolygons,

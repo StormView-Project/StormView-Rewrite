@@ -169,7 +169,7 @@
 
 .bm-btn--accent {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
 }
 .bm-btn--accent:hover { opacity: 0.88; }
 

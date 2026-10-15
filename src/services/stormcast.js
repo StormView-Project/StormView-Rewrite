@@ -51,6 +51,15 @@ export function getRadarTileUrl({ host, path, size = RADAR_TILE_SIZE, colorSchem
 }
 
 /**
+ * Raw reflectivity tile for the on-device (WebAssembly) renderer: color scheme
+ * 255 with server smoothing and snow off.  Pixel value v encodes dBZ = v/2 - 32;
+ * the client colors and smooths it, so one URL serves every color scheme.
+ */
+export function getRawRadarTileUrl({ host, path, size = RADAR_TILE_SIZE }) {
+  return getRadarTileUrl({ host, path, size, colorScheme: 255, smooth: 0, snow: 0 });
+}
+
+/**
  * Returns a human-readable label for a radar frame timestamp.
  */
 export function getFrameLabel(timestamp) {
