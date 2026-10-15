@@ -18,6 +18,13 @@
 .leaflet-radar-pane.radar-pane--fade > div {
   transition: opacity 180ms linear;
 }
+/* Leaflet also fades each newly loaded tile in over 200ms via inline opacity,
+   which shows up when stepping to a frame that wasn't preloaded. !important
+   beats the inline style; unloaded tiles stay hidden by Leaflet's own
+   visibility rule. */
+.leaflet-radar-pane:not(.radar-pane--fade) .leaflet-tile {
+  opacity: 1 !important;
+}
 
 /* Custom location pin */
 .location-pin {

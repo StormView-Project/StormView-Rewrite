@@ -6,7 +6,7 @@ import { WasmRadarTileLayer, isRadarWasmAvailable, onRadarWasmFailure } from '..
 import useAppStore from '../../store/useAppStore';
 
 /**
- * Windowed radar renderer — keeps (1 + PRELOAD_AHEAD) frames on the map at once.
+ * Windowed radar renderer — keeps (KEEP_BEHIND + 1 + PRELOAD_AHEAD) frames on the map at once.
  * The window slides as the animation advances; evicted frames are removed so their
  * tile fetches stop. Browser HTTP cache makes replays near-instant.
  *
@@ -27,6 +27,7 @@ import useAppStore from '../../store/useAppStore';
  */
 
 const PRELOAD_AHEAD = 4;
+const KEEP_BEHIND   = 1; // so stepping back a frame is instant, not a reload
 const FRAME_TIMEOUT = 12_000;
 const RADAR_PANE    = 'radar';
 
@@ -156,17 +157,20 @@ export function RadarLayer() {
     };
   }, [map]);
 
-  /* ---- Windowed load: current frame + PRELOAD_AHEAD next frames ---- */
+  /* ---- Windowed load: KEEP_BEHIND previous + current + PRELOAD_AHEAD next frames ---- */
   useEffect(() => {
     if (!frames.length) return;
     // Frames from the Open-Meteo source have no tile `path` — that layer renders them.
     if (frames[0]?.path == null) return;
 
-    const windowSize = PRELOAD_AHEAD + 1;
+    const n = frames.length;
+    const offsets = [];
+    for (let j = -KEEP_BEHIND; j <= PRELOAD_AHEAD; j++) offsets.push(j);
+    const frameAt = (j) => frames[(((currentIdx + j) % n) + n) % n];
 
     const wanted = new Set();
-    for (let j = 0; j < windowSize; j++) {
-      wanted.add(frameKey(frames[(currentIdx + j) % frames.length], cs, tileQuality, arrowStyle, useWasm));
+    for (const j of offsets) {
+      wanted.add(frameKey(frameAt(j), cs, tileQuality, arrowStyle, useWasm));
     }
 
     // Evict stale layers (snapshot first to avoid mutating Map during iteration)
@@ -198,8 +202,8 @@ export function RadarLayer() {
 
     reportProgress();
 
-    for (let j = 0; j < windowSize; j++) {
-      const frame = frames[(currentIdx + j) % frames.length];
+    for (const j of offsets) {
+      const frame = frameAt(j);
       const [k, layer] = getOrCreate(frame, cs, tileQuality, arrowStyle, useWasm, cache.current);
 
       if (!layer._map) {
