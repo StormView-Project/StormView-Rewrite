@@ -77,6 +77,21 @@ function requestTile(msg) {
   return { id, promise };
 }
 
+/**
+ * Background-download raw tiles for the given frames (URL templates, in the
+ * order they'll play) at zoom `z` for the visible tile `coords`.  Replaces any
+ * earlier prefetch list; an empty list stops prefetching.
+ */
+export function prefetchRadarTiles(templates, z, coords) {
+  if (!worker && !templates.length) return;
+  getWorker()?.postMessage({
+    type: 'prefetch',
+    templates,
+    z,
+    coords: coords.map(({ x, y }) => ({ x, y })),
+  });
+}
+
 function cancelTile(id) {
   if (!pending.delete(id)) return;
   worker?.postMessage({ type: 'cancel', id });

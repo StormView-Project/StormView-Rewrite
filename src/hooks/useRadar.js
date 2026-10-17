@@ -71,8 +71,12 @@ export function useRadar() {
     const delay = FRAME_DURATIONS[radarSpeed] ?? 400;
     animTimerRef.current = setInterval(() => {
       useAppStore.setState((s) => {
-        const nextIdx = s.radarCurrentIdx + 1;
-        if (nextIdx >= s.radarFrames.length) return { radarCurrentIdx: 0 };
+        const nextIdx = s.radarCurrentIdx + 1 >= s.radarFrames.length ? 0 : s.radarCurrentIdx + 1;
+        // LibreWXR frames: hold on the current frame until the next one's tiles
+        // have loaded, so the scrubber never runs ahead of a blank map.
+        // (Open-Meteo frames have no path and render on their own.)
+        const next = s.radarFrames[nextIdx];
+        if (s.radarReadyPaths && next?.path != null && !s.radarReadyPaths.has(next.path)) return s;
         return { radarCurrentIdx: nextIdx };
       });
     }, delay);

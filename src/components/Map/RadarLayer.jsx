@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { getRadarTileUrl, getRawRadarTileUrl, RADAR_TILE_SIZE, RADAR_ZOOM_OFFSET } from '../../services/stormcast';
-import { WasmRadarTileLayer, isRadarWasmAvailable, onRadarWasmFailure } from '../../radar-wasm/radarRenderer';
+import { WasmRadarTileLayer, isRadarWasmAvailable, onRadarWasmFailure, prefetchRadarTiles } from '../../radar-wasm/radarRenderer';
 import useAppStore from '../../store/useAppStore';
 
 /**
@@ -87,6 +87,7 @@ export function RadarLayer() {
   const renderer    = useAppStore((s) => s.radarRenderer);
   const frameFade   = useAppStore((s) => s.radarFrameFade);
   const setProgress = useAppStore((s) => s.setRadarTileProgress);
+  const setReadyPaths = useAppStore((s) => s.setRadarReadyPaths);
 
   // dark UI → light arrows for contrast; light UI → dark arrows
   const isDark    = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -131,7 +132,9 @@ export function RadarLayer() {
     timeouts.current.clear();
     activeKey.current = null;
     setProgress(null);
-  }, [map, setProgress]);
+    setReadyPaths(null);
+    prefetchRadarTiles([], 0, []);
+  }, [map, setProgress, setReadyPaths]);
 
   /* ---- Pan/zoom: stop stale requests, reload after settle, re-warm new viewport ---- */
   useEffect(() => {
@@ -143,6 +146,7 @@ export function RadarLayer() {
       });
       readyKeys.current.clear();
       watchedKeys.current.clear();
+      useAppStore.getState().setRadarReadyPaths(new Set());
       timeouts.current.forEach(id => clearTimeout(id));
       timeouts.current.clear();
       clearTimeout(moveTimer.current);
@@ -190,10 +194,28 @@ export function RadarLayer() {
     // produce an unreachable completion count.
     const targetSize = wanted.size;
 
+    const keyOf = (f) => frameKey(f, cs, tileQuality, arrowStyle, useWasm);
+
+    // Once the window is loaded, have the worker fetch raw tiles for every other
+    // frame in the background, so playback reaches them already downloaded
+    // (rendering from local data then takes a few ms instead of a round trip).
+    const prefetchRest = () => {
+      const layer = cache.current.get(keyOf(frames[currentIdx]));
+      if (!useWasm || !layer?._map) return;
+      const coords = Object.values(layer._tiles).map((t) => t.coords);
+      const ahead = [...frames.slice(currentIdx), ...frames.slice(0, currentIdx)];
+      const templates = ahead
+        .filter((f) => !wanted.has(keyOf(f)))
+        .map((f) => getRawRadarTileUrl({ host: f.host, path: f.path, size: tileQuality }));
+      prefetchRadarTiles(templates, layer._getZoomForUrl(), coords);
+    };
+
     const reportProgress = () => {
+      setReadyPaths(new Set(frames.filter((f) => readyKeys.current.has(keyOf(f))).map((f) => f.path)));
       const loaded = [...readyKeys.current].filter(k => wanted.has(k)).length;
       if (loaded >= targetSize) {
         setProgress(null);
+        prefetchRest();
       } else {
         setProgress({ loadedTiles: loaded, totalTiles: targetSize,
           framesLoaded: loaded, framesTotal: targetSize, startTime: t0 });
@@ -250,7 +272,7 @@ export function RadarLayer() {
     layer.setOpacity(useAppStore.getState().radarOpacity);
     activeKey.current = k;
 
-  }, [map, frames, currentIdx, cs, tileQuality, arrowStyle, useWasm, setProgress, viewEpoch]);
+  }, [map, frames, currentIdx, cs, tileQuality, arrowStyle, useWasm, setProgress, setReadyPaths, viewEpoch]);
 
   /* ---- Opacity slider ---- */
   useEffect(() => {

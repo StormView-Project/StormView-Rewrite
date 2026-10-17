@@ -87,6 +87,23 @@ function MapController({ location, theme, mapRef, onContextMenu, onMap }) {
   // Expose map instance to parent
   useEffect(() => { mapRef.current = map; onMap?.(map); }, [map, mapRef, onMap]);
 
+  // Leaflet measures its container once and only re-measures on window resize.
+  // If the container is still settling when the map mounts (layout/CSS not
+  // final yet), tiles only load for that initial area and the rest of the map
+  // stays blank. Re-measure whenever the container itself changes size.
+  useEffect(() => {
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    });
+    observer.observe(map.getContainer());
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [map]);
+
   useMapEvents({
     zoomend: () => setMapZoom(map.getZoom()),
     contextmenu: (e) => {

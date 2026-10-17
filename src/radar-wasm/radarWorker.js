@@ -7,6 +7,7 @@
  *
  * Messages in:   { type: 'render', id, template, z, x, y, scheme }
  *                { type: 'cancel', id }
+ *                { type: 'prefetch', templates, z, coords }  (background, low priority)
  * Messages out:  { type: 'ready' } | { type: 'failed', message }
  *                { type: 'tile', id, bitmap }   (bitmap null = transparent)
  *                { type: 'error', id, message }
@@ -15,6 +16,7 @@ import wasmUrl from './radar.wasm?url';
 import { createRadarCore, blurRadiusFor, EMPTY } from './radarCore.js';
 
 const CACHE_BUDGET = 64 * 1024 * 1024; // decoded raw values, bytes
+const PREFETCH_CONCURRENCY = 3;        // leave connections free for visible tiles
 
 let core = null;
 const coreReady = (async () => {
@@ -75,8 +77,8 @@ async function decodeFallback(blob) {
   return { size: bmp.width, values: nonzero ? values : null, block: 0 };
 }
 
-async function fetchRaw(url, signal) {
-  const res = await fetch(url, { signal });
+async function fetchRaw(url, signal, priority) {
+  const res = await fetch(url, { signal, priority });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const buf = await res.arrayBuffer();
   await coreReady;
@@ -85,14 +87,14 @@ async function fetchRaw(url, signal) {
 }
 
 /** Starts (or joins) the fetch for `url`. `own` requests can cancel it. */
-function loadRaw(url, own) {
+function loadRaw(url, own, priority = 'auto') {
   const hit = cacheGet(url);
   if (hit) return Promise.resolve(hit);
   let entry = inflight.get(url);
   if (!entry) {
     const controller = new AbortController();
     entry = { controller, refs: 0 };
-    entry.promise = fetchRaw(url, controller.signal)
+    entry.promise = fetchRaw(url, controller.signal, priority)
       .then((tile) => { cachePut(url, tile); return tile; })
       .finally(() => { if (inflight.get(url) === entry) inflight.delete(url); });
     inflight.set(url, entry);
@@ -113,6 +115,35 @@ function release(url) {
 
 const tileUrl = (template, z, x, y) =>
   template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+
+/* ---- Background prefetch of upcoming frames ---- */
+
+let prefetchQueue = [];
+let prefetchActive = 0;
+
+function pumpPrefetch() {
+  while (prefetchActive < PREFETCH_CONCURRENCY && prefetchQueue.length) {
+    // Stop before prefetching would evict tiles we already have.
+    if (cacheBytes > CACHE_BUDGET * 0.8) { prefetchQueue = []; return; }
+    const url = prefetchQueue.shift();
+    if (cache.has(url) || inflight.has(url)) continue;
+    prefetchActive++;
+    loadRaw(url, false, 'low')
+      .catch(() => {})
+      .finally(() => { prefetchActive--; pumpPrefetch(); });
+  }
+}
+
+function prefetch({ templates, z, coords }) {
+  const n = 1 << z;
+  prefetchQueue = [];
+  for (const template of templates) {
+    for (const { x, y } of coords) {
+      if (y >= 0 && y < n) prefetchQueue.push(tileUrl(template, z, ((x % n) + n) % n, y));
+    }
+  }
+  pumpPrefetch();
+}
 
 /** Last block-size estimate per zoom, for tiles too sparse to measure. */
 const blockByZoom = new Map();
@@ -174,6 +205,8 @@ async function render({ id, template, z, x, y, scheme }) {
 self.onmessage = ({ data }) => {
   if (data.type === 'render') {
     render(data);
+  } else if (data.type === 'prefetch') {
+    prefetch(data);
   } else if (data.type === 'cancel') {
     const url = live.get(data.id);
     if (url) {

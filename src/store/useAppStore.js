@@ -58,6 +58,9 @@ const useAppStore = create(
       settingsTab: 'location', // 'location' | 'api' | 'display' | 'widgets' | 'radar' | 'alerts'
       // { loadedTiles, totalTiles, framesLoaded, framesTotal, startTime }
       radarTileProgress: null,
+      // LibreWXR frame paths whose tiles are loaded (set by RadarLayer; null when
+      // it isn't mounted). Playback waits on this so it never outruns the tiles.
+      radarReadyPaths: null,
       dismissedWhatsNewVersion: null, // persisted — stores the version string user dismissed
 
       // ---- Radar playback state ----
@@ -118,6 +121,7 @@ const useAppStore = create(
       setSettingsOpen: (open) => set({ settingsOpen: open }),
       setSettingsTab: (tab) => set({ settingsTab: tab }),
       setRadarTileProgress: (p) => set({ radarTileProgress: p }),
+      setRadarReadyPaths: (paths) => set({ radarReadyPaths: paths }),
       setDismissedWhatsNewVersion: (v) => set({ dismissedWhatsNewVersion: v }),
 
       // ---- Setters: radar ----
