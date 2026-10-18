@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { Settings, MapPin, Navigation } from 'lucide-react';
+import { Settings, MapPin, Navigation, Download } from 'lucide-react';
 import { MapView } from './components/Map/MapView';
 import { WeatherSidebar } from './components/WeatherSidebar/WeatherSidebar';
 import { MobileWeatherBtn, WeatherBottomSheet } from './components/WeatherBottomSheet/WeatherBottomSheet';
@@ -9,6 +9,7 @@ import { ErrorReporter } from './components/ErrorReporter/ErrorReporter';
 import { RadarLoadingBar } from './components/RadarLoadingBar/RadarLoadingBar';
 import { WhatsNewModal } from './components/WhatsNewModal/WhatsNewModal';
 import { BetaModal } from './components/BetaModal/BetaModal';
+import { DownloadModal } from './components/DownloadModal/DownloadModal';
 import { Spinner } from './components/ui/Spinner';
 const WeatherAssistant = lazy(() =>
   import('./components/WeatherAssistant/WeatherAssistant').then((m) => ({ default: m.WeatherAssistant }))
@@ -72,6 +73,7 @@ export default function App() {
   const [showGeoModal, setShowGeoModal] = useState(false);
   const [weatherSheetOpen, setWeatherSheetOpen] = useState(false);
   const [showBetaModal, setShowBetaModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   useEffect(() => {
     if (!location) setShowGeoModal(true);
@@ -155,11 +157,19 @@ export default function App() {
         </>
       )}
 
-      {/* Top-right corner: beta chip + settings gear.
+      {/* Top-right corner: download chip + beta chip + settings gear.
           The new mobile layout renders its own settings controls (a header
           button on the home screen, the glass gear on the radar overlay). */}
       {!useMobileLayout && !isWatch && (
         <div className="app-top-corner">
+          <button
+            className="app-download-chip"
+            onClick={() => setShowDownloadModal(true)}
+            title="Download the StormView app"
+          >
+            <Download size={11} strokeWidth={2.5} />
+            DOWNLOAD
+          </button>
           <button
             className="app-beta-chip"
             onClick={() => setShowBetaModal(true)}
@@ -191,6 +201,9 @@ export default function App() {
 
       {/* Beta info modal */}
       {showBetaModal && <BetaModal onClose={() => setShowBetaModal(false)} />}
+
+      {/* App downloads modal */}
+      {showDownloadModal && <DownloadModal onClose={() => setShowDownloadModal(false)} />}
 
       {/* On-device weather assistant (WebLLM) — lazy-loaded, not shown on watch */}
       {!isWatch && (
