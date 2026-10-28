@@ -9,6 +9,7 @@ import { ErrorReporter } from './components/ErrorReporter/ErrorReporter';
 import { RadarLoadingBar } from './components/RadarLoadingBar/RadarLoadingBar';
 import { WhatsNewModal } from './components/WhatsNewModal/WhatsNewModal';
 import { BetaModal } from './components/BetaModal/BetaModal';
+import { DeprecationModal } from './components/DeprecationModal/DeprecationModal';
 import { Spinner } from './components/ui/Spinner';
 const WeatherAssistant = lazy(() =>
   import('./components/WeatherAssistant/WeatherAssistant').then((m) => ({ default: m.WeatherAssistant }))
@@ -72,6 +73,7 @@ export default function App() {
   const [showGeoModal, setShowGeoModal] = useState(false);
   const [weatherSheetOpen, setWeatherSheetOpen] = useState(false);
   const [showBetaModal, setShowBetaModal] = useState(false);
+  const [showDeprecation, setShowDeprecation] = useState(true);
 
   useEffect(() => {
     if (!location) setShowGeoModal(true);
@@ -208,6 +210,9 @@ export default function App() {
           error={geoError}
         />
       )}
+
+      {/* Deprecation notice — shown every time the app opens */}
+      {showDeprecation && <DeprecationModal onContinue={() => setShowDeprecation(false)} />}
     </div>
   );
 }
